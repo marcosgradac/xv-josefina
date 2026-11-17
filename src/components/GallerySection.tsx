@@ -1,192 +1,40 @@
-import React, { useState } from 'react';
-import { Box, Typography, Button, IconButton } from '@mui/material';
+import { useEffect, useRef, useState, type Ref, type CSSProperties } from 'react';
+import { Box, Button, Dialog, DialogTitle, IconButton } from '@mui/material';
 import { EVENT } from '../config/event';
+import './GallerySection.css';
 
-export default function GallerySection({
-  ref,
-  onScrollTo,
-}: {
-  ref: React.Ref<HTMLDivElement>;
-  onScrollTo: (id: string) => void;
-}) {
-  const [current, setCurrent] = useState(0);
-  const totalPhotos = EVENT.gallery.length;
-
-  const showPhoto = (index: number) => {
-    setCurrent((index + totalPhotos) % totalPhotos);
-  };
-
-  return (
-    <Box
-      ref={ref}
-      id="gallery"
-      component="section"
-      className="invitation-section"
-      sx={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--bg)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        padding: { xs: 2.5, sm: 4 },
-      }}
-    >
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          background: 'rgba(5,5,5,0.68)',
-        }}
-      />
-      <Box sx={{ position: 'relative', zIndex: 2, maxWidth: 900, mx: 'auto', width: '100%' }}>
-        <Typography
-          variant="caption"
-          component="div"
-          sx={{
-            color: '#D4AF37',
-            textTransform: 'uppercase',
-            letterSpacing: '0.4em',
-            fontSize: '0.75rem',
-            opacity: 0.5,
-            fontFamily: 'Montserrat, sans-serif',
-            mb: 1,
-          }}
-        >
-          Recuerdos para guardar
-        </Typography>
-        <Typography
-          variant="h2"
-          component="h2"
-          className="script-heading section-heading"
-          sx={{
-            fontSize: { xs: '3rem', sm: '4.25rem' },
-            fontWeight: 400,
-            color: 'var(--gold-light)',
-            mb: 3,
-            textAlign: 'center',
-          }}
-        >
-          Galería
-        </Typography>
-        <Box
-          sx={{
-            position: 'relative',
-            width: 'min(100%, 30rem)',
-            mx: 'auto',
-            aspectRatio: { xs: '3 / 4', sm: '4 / 5' },
-            borderRadius: 3,
-            overflow: 'hidden',
-            backgroundColor: 'rgba(255,255,255,0.05)',
-            mb: 3,
-            border: '1px solid',
-            borderColor: 'rgba(212,175,55,0.2)',
-          }}
-        >
-          {EVENT.gallery.map((photo, idx) => (
-            <img
-              key={idx}
-              src={photo.url}
-              alt={idx === current ? photo.caption || `Foto ${idx + 1} de la galería` : ''}
-              aria-hidden={idx !== current}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              opacity: idx === current ? 1 : 0,
-                transition: 'opacity 0.6s ease-in-out',
-              }}
-              decoding="async"
-              loading="lazy"
-            />
-          ))}
-          {totalPhotos > 1 && (
-            <>
-              <IconButton
-                aria-label="Foto anterior"
-                onClick={() => showPhoto(current - 1)}
-                sx={galleryControlSx('left')}
-              >
-                ‹
-              </IconButton>
-              <IconButton
-                aria-label="Foto siguiente"
-                onClick={() => showPhoto(current + 1)}
-                sx={galleryControlSx('right')}
-              >
-                ›
-              </IconButton>
-            </>
-          )}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 12,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: 1,
-            }}
-          >
-            {EVENT.gallery.map((_, idx) => (
-              <IconButton
-                key={idx}
-                aria-label={`Ver foto ${idx + 1}`}
-                aria-current={idx === current ? 'true' : undefined}
-                onClick={() => showPhoto(idx)}
-                sx={{
-                  width: 22,
-                  height: 22,
-                  p: 0,
-                  '&::before': {
-                    content: '""',
-                    width: idx === current ? 9 : 7,
-                    height: idx === current ? 9 : 7,
-                    borderRadius: '50%',
-                    backgroundColor: idx === current ? 'var(--gold-light)' : 'rgba(255,255,255,0.5)',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
-        <Button
-          sx={{
-            bgcolor: '#D4AF37',
-            color: '#0b0b14',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.2em',
-            fontSize: '0.85rem',
-            py: 1,
-            px: 3,
-            '&:hover': { bgcolor: '#e0bf90' },
-            m: 'auto',
-            display: 'block',
-          }}
-          onClick={() => onScrollTo('countdown')}
-        >
-          Ver cuenta regresiva
-        </Button>
-      </Box>
-    </Box>
-  );
+function CameraOrnament() {
+  return <svg className="album-camera" viewBox="0 0 140 72" fill="none" stroke="currentColor" strokeWidth=".85" aria-hidden="true" focusable="false">
+    <path d="M5 43h18m94 0h18M30 25h19l6-9h30l6 9h19v39H30Z"/>
+    <path d="M34 29h72v31H34m6-35v-5h9m45 5v-4h9v4M57 20h26M31 35h16m46 0h16" strokeOpacity=".55"/>
+    <circle cx="70" cy="44" r="18"/><circle cx="70" cy="44" r="14" strokeOpacity=".65"/><path d="M70 51c-16-10-5-17 0-10 5-7 16 0 0 10Z"/>
+    <path d="M48 8h44M40 11h9m42 0h9M70 3v7m-3-3h6M13 36l2 3-2 3-2-3ZM127 36l2 3-2 3-2-3Z" strokeOpacity=".65"/>
+    <rect x="95" y="30" width="7" height="4" rx="1"/><path d="M38 55h8m-8-3h5M67 63h6" strokeOpacity=".6"/>
+  </svg>;
 }
+export default function GallerySection({ref,onScrollTo}:{ref:Ref<HTMLDivElement>;onScrollTo:(id:string)=>void}) {
+  const [selected,setSelected]=useState<number|null>(null);
+  const content=useRef<HTMLDivElement>(null);
+  const touch=useRef<number|null>(null);
+  const count=EVENT.gallery.length;
+  const move=(direction:number)=>setSelected(value=>value===null?null:(value+direction+count)%count);
+  useEffect(()=>{const el=content.current;if(!el||!('IntersectionObserver' in window))return;const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){el.classList.add('album-visible');observer.disconnect();}},{threshold:.08});el.classList.add('album-ready');observer.observe(el);return()=>observer.disconnect();},[]);
+  return <Box ref={ref} component="section" id="gallery" className="luxury-album" aria-labelledby="gallery-title">
+    <div className="album-stars" aria-hidden="true">{Array.from({length:20},(_,i)=><span key={i} style={{left:`${(i*37+5)%96}%`,top:`${(i*23+9)%95}%`,animationDelay:`${-i*1.3}s`,animationDuration:`${6+i%7}s`}}>{i%5===0?'✦':'·'}</span>)}</div>
+    <div ref={content} className="album-content">
+      <header className="album-header"><CameraOrnament/><p>Mis mejores momentos</p><h2 id="gallery-title">Galería</h2><div className="album-rule" aria-hidden="true">✦</div></header>
+      <div className="album-stage"><span className="album-plane album-plane-back" aria-hidden="true"/><span className="album-plane album-plane-front" aria-hidden="true"/><div className="album-grid">{EVENT.gallery.map((photo,index)=><button type="button" key={photo.url} className={`album-photo album-photo-${index}`} style={{'--photo-delay':`${200+index*180}ms`} as CSSProperties} aria-label={`Ampliar fotografía ${index+1} de Josefina`} onClick={()=>setSelected(index)}><img src={photo.url} alt={photo.caption||`Retrato de Josefina ${index+1}`} loading="lazy" decoding="async"/><span className="album-frame" aria-hidden="true"/></button>)}</div></div>
+      <div className="album-dots" aria-hidden="true"><span/>◇<span/></div>
 
-const galleryControlSx = (side: 'left' | 'right') => ({
-  position: 'absolute',
-  top: '50%',
-  [side]: { xs: 8, sm: 14 },
-  transform: 'translateY(-50%)',
-  width: 40,
-  height: 40,
-  color: 'var(--text-light)',
-  fontSize: '2rem',
-  fontFamily: 'var(--serif)',
-  backgroundColor: 'rgba(5, 5, 5, 0.44)',
-  border: '1px solid rgba(236, 211, 159, 0.55)',
-  '&:hover': { backgroundColor: 'rgba(201, 163, 94, 0.35)' },
-});
+      <Button className="album-next" onClick={()=>onScrollTo('countdown')}><span aria-hidden="true">◷</span> Ver cuenta regresiva <span className="album-arrow" aria-hidden="true">→</span></Button>
+    </div>
+    <svg className="album-trail" viewBox="0 0 500 140" fill="none" aria-hidden="true"><path d="M-20 130C130 20 250 170 520 10" stroke="#c9a35e" strokeWidth="1" strokeDasharray="1 10"/><path className="album-trail-light" pathLength="100" d="M-20 130C130 20 250 170 520 10" stroke="#ecd39f" strokeWidth="2" strokeDasharray=".2 3  .2 96.6"/></svg>
+    <Dialog open={selected!==null} onClose={()=>setSelected(null)} maxWidth="lg" fullWidth className="album-lightbox" onKeyDown={e=>{if(e.key==='ArrowRight'){e.preventDefault();move(1);}if(e.key==='ArrowLeft'){e.preventDefault();move(-1);}}}>
+      <DialogTitle className="album-viewer-title">Fotografías de Josefina <span>{selected===null?'':`${selected+1} / ${count}`}</span></DialogTitle>
+      <IconButton className="album-close" aria-label="Cerrar visor de fotografías" onClick={()=>setSelected(null)}>×</IconButton>
+      {selected!==null&&<div className="album-viewer" onTouchStart={e=>{touch.current=e.touches[0].clientX;}} onTouchEnd={e=>{if(touch.current!==null){const distance=e.changedTouches[0].clientX-touch.current;if(Math.abs(distance)>50)move(distance<0?1:-1);}touch.current=null;}}><img src={EVENT.gallery[selected].url} alt={EVENT.gallery[selected].caption||`Retrato de Josefina ${selected+1}`}/></div>}
+      <div className="album-viewer-controls"><IconButton aria-label="Fotografía anterior" onClick={()=>move(-1)}>←</IconButton><IconButton aria-label="Fotografía siguiente" onClick={()=>move(1)}>→</IconButton></div>
+    </Dialog>
+  </Box>;
+}
 

@@ -1,0 +1,54 @@
+/* Section 2 uses its own namespace and never changes shared navigation or Hero. */
+.celestial-program { position:relative; isolation:isolate; min-height:100svh; display:grid; place-items:center; padding:75px clamp(18px,5vw,64px) 32px; background:#050505; color:#fbf3e5; overflow:hidden; }
+.deco-content { position:relative; z-index:1; width:min(100%,570px); }
+.deco-header { text-align:center; }
+.deco-arch { display:block; width:min(100%,360px); height:auto; margin:0 auto 10px; overflow:visible; }
+.deco-pendant { animation:deco-swing 9s ease-in-out infinite; }
+.deco-arch-star { animation:deco-glow 6s ease-in-out infinite; filter:drop-shadow(0 0 5px rgba(236,211,159,.4)); }
+.deco-arch-light { stroke-dasharray:2 98; animation:deco-arch-travel 10s linear infinite; }
+.deco-eyebrow { margin:0 auto 17px; max-width:290px; font:500 clamp(9px,2.6vw,11px)/1.8 var(--sans); letter-spacing:.3em; text-transform:uppercase; color:#c9a35e; }
+.celestial-program h2 { margin:0; font:400 clamp(34px,9.5vw,53px)/1.2 var(--script); color:#ecd39f; text-align:center; }
+.deco-divider { display:flex; align-items:center; justify-content:center; gap:8px; width:min(78%,245px); margin:20px auto 0; color:#ecd39f; }
+.deco-divider span { flex:1; height:1px; background:linear-gradient(90deg,transparent,#c9a35e); }.deco-divider span:last-child { transform:scaleX(-1); }
+.deco-divider b { font:400 10px/1 var(--serif); }.deco-divider i { font-style:normal; font-size:18px; animation:deco-glow 8s ease-in-out infinite; }
+.deco-timeline { position:relative; display:grid; gap:27px; padding:0; margin:38px 0 0; list-style:none; }
+.deco-timeline::before { content:''; position:absolute; left:22px; top:43px; bottom:43px; width:1px; background:linear-gradient(#c9a35e,#ecd39f,#c9a35e); box-shadow:0 0 7px rgba(201,163,94,.25); transform-origin:top; }
+.deco-timeline::after { content:''; position:absolute; left:21px; top:43px; bottom:43px; width:3px; background:linear-gradient(transparent 42%,#ecd39f 50%,transparent 58%); background-size:100% 120px; background-repeat:no-repeat; animation:deco-line-light 12s linear infinite; pointer-events:none; }
+.deco-event { position:relative; display:grid; grid-template-columns:45px minmax(0,1fr); gap:14px; align-items:center; min-width:0; }
+.deco-medallion { position:relative; z-index:2; display:grid; place-items:center; width:45px; height:45px; border:1px solid #c9a35e; border-radius:50%; background:#050505; color:#ecd39f; box-shadow:0 0 0 5px #050505,0 0 14px rgba(201,163,94,.13); }
+.deco-medallion::before { content:''; position:absolute; inset:3px; border:1px solid rgba(201,163,94,.22); border-radius:50%; }
+.deco-medallion svg { width:25px; height:25px; }
+.deco-event-card { position:relative; min-width:0; min-height:93px; padding:19px 17px 25px; border:1px solid rgba(201,163,94,.75); border-radius:13px 4px 13px 4px; background:radial-gradient(ellipse at 8% 0%,rgba(201,163,94,.1),transparent 72%),linear-gradient(135deg,#10100f,#050505 85%); box-shadow:inset 0 1px 0 rgba(236,211,159,.12),0 5px 20px rgba(201,163,94,.065); }
+.deco-event-time { margin:0 0 8px; font:500 clamp(14px,3.8vw,17px)/1.3 var(--sans); letter-spacing:.18em; color:#ecd39f; font-variant-numeric:tabular-nums; }.deco-event-time span { font-size:9px; color:#c9a35e; }
+.celestial-program h3 { margin:0; font:400 clamp(16px,4.3vw,21px)/1.4 var(--serif); color:#fbf3e5; text-wrap:balance; }
+.deco-event-card::after { content:'✦'; position:absolute; top:-7px; right:19px; font-size:12px; color:#ecd39f; text-shadow:0 0 6px rgba(236,211,159,.6); animation:deco-card-glint 10s ease-in-out infinite; }
+.deco-event:nth-child(2) .deco-event-card::after { animation-delay:-3s; }.deco-event:nth-child(3) .deco-event-card::after { animation-delay:-6s; }
+.deco-card-corner { position:absolute; bottom:6px; right:6px; width:21px; height:21px; border-bottom:1px solid #c9a35e; border-right:1px solid #c9a35e; opacity:.9; pointer-events:none; }.deco-card-corner::before { content:''; position:absolute; right:5px; bottom:5px; width:4px; height:4px; border:1px solid #ecd39f; transform:rotate(45deg); }
+.deco-timeline-diamond { position:absolute; bottom:-18px; left:19px; z-index:2; font-size:7px; line-height:1; color:#ecd39f; text-shadow:0 0 6px rgba(236,211,159,.6); }
+.deco-footer { margin-top:31px; }.deco-footer .deco-divider { width:min(85%,310px); }
+.deco-particles { position:absolute; inset:0; pointer-events:none; z-index:0; }.deco-particles span { position:absolute; color:#ecd39f; font-size:13px; opacity:.4; text-shadow:0 0 6px rgba(201,163,94,.4); animation:deco-particle var(--deco-duration) var(--deco-delay) ease-in-out infinite; }
+.deco-motion-ready:not(.deco-visible) .deco-header,.deco-motion-ready:not(.deco-visible) .deco-event,.deco-motion-ready:not(.deco-visible) .deco-footer { opacity:0; transform:translateY(8px); }
+.deco-motion-ready:not(.deco-visible) .deco-timeline::before { transform:scaleY(0); }
+.deco-visible .deco-header { animation:deco-reveal 800ms ease-out both; }.deco-visible .deco-timeline::before { animation:deco-line-reveal 1s 200ms ease-out both; }
+.deco-visible .deco-event { animation:deco-reveal 750ms var(--event-delay) ease-out both; }.deco-visible .deco-medallion { animation:deco-medallion-light 1.5s var(--event-delay) ease-out; }.deco-visible .deco-footer { animation:deco-reveal 900ms 850ms ease-out both; }
+@keyframes deco-reveal { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes deco-line-reveal { from { transform:scaleY(0); } to { transform:scaleY(1); } }
+@keyframes deco-glow { 0%,100% { opacity:.5; } 50% { opacity:1; } }
+@keyframes deco-swing { 0%,100% { transform:rotate(-1.3deg); } 50% { transform:rotate(1.3deg); } }
+@keyframes deco-arch-travel { 0% { stroke-dashoffset:0; opacity:0; } 15%,80% { opacity:.8; } 100% { stroke-dashoffset:-100; opacity:0; } }
+@keyframes deco-line-light { from { background-position:0 -120px; } to { background-position:0 450px; } }
+@keyframes deco-card-glint { 0%,65%,100% { opacity:.12; } 78% { opacity:.95; } }
+@keyframes deco-medallion-light { 40% { box-shadow:0 0 0 5px #050505,0 0 23px rgba(236,211,159,.4); } }
+@keyframes deco-particle { 0%,100% { opacity:.15; transform:translateY(0) scale(.8); } 50% { opacity:.7; transform:translateY(-5px) scale(1); } }
+@media(hover:hover) { .deco-event-card { transition:border-color .3s,box-shadow .3s; }.deco-event-card:hover { border-color:#ecd39f; box-shadow:0 0 18px rgba(201,163,94,.12); } }
+@media(min-width:700px) { .celestial-program { padding-block:85px 32px; }.deco-event { gap:23px; }.deco-event-card { padding:22px 25px; }.deco-timeline { gap:30px; } }
+@media(prefers-reduced-motion:reduce) { .celestial-program *, .celestial-program *::before, .celestial-program *::after { animation:none !important; transition:none !important; }.celestial-program .deco-motion-ready .deco-header,.celestial-program .deco-motion-ready .deco-event,.celestial-program .deco-motion-ready .deco-footer { opacity:1; transform:none; }.celestial-program .deco-motion-ready .deco-timeline::before { transform:none; }.deco-arch-light,.deco-timeline::after { opacity:0; } }
+.deco-arch-light-inner { animation-duration:12s; animation-delay:-5s; }
+.deco-star-flash { opacity:0; animation:deco-star-flash 11s ease-in-out infinite; }
+.deco-card-corner::after { content:''; position:absolute; inset:3px; border-right:1px solid rgba(236,211,159,.45); border-bottom:1px solid rgba(236,211,159,.45); }
+.deco-event-card::before { content:''; position:absolute; left:15px; top:-1px; width:35px; height:1px; background:linear-gradient(90deg,transparent,#ecd39f,transparent); box-shadow:0 0 5px rgba(236,211,159,.3); pointer-events:none; }
+@keyframes deco-star-flash { 0%,72%,100% { opacity:0; transform:scale(.85); } 80% { opacity:.85; transform:scale(1.15); } 89% { opacity:.15; transform:scale(1); } }
+.deco-star-flash { transform-origin:180px 28px; }
+/* A right-hand lane keeps fixed navigation clear of every card while scrolling. */
+@media(max-width:699px) { .deco-timeline { margin-right:calc(46px + env(safe-area-inset-right)); }.deco-event { gap:11px; }.deco-event-card { padding-inline:13px; }.celestial-program h3 { overflow-wrap:break-word; } }
+@media(prefers-reduced-motion:reduce) { .deco-star-flash { animation:none; opacity:.4; } }

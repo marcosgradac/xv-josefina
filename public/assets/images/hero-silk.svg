@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 330" fill="none">
+<defs>
+<linearGradient id="silk" x1="35" y1="95" x2="160" y2="185" gradientUnits="userSpaceOnUse"><stop stop-color="#050505" stop-opacity="0"/><stop offset=".32" stop-color="#c9a35e" stop-opacity=".13"/><stop offset=".58" stop-color="#ecd39f" stop-opacity=".24"/><stop offset=".78" stop-color="#c9a35e" stop-opacity=".07"/><stop offset="1" stop-color="#050505" stop-opacity="0"/></linearGradient>
+<linearGradient id="edge" x1="0" y1="260" x2="370" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#c9a35e" stop-opacity="0"/><stop offset=".3" stop-color="#c9a35e"/><stop offset=".5" stop-color="#fbf3e5"/><stop offset=".62" stop-color="#ecd39f"/><stop offset="1" stop-color="#c9a35e" stop-opacity="0"/></linearGradient>
+<pattern id="dust" width="29" height="31" patternUnits="userSpaceOnUse"><circle cx="7" cy="9" r=".55" fill="#ecd39f" opacity=".5"/><circle cx="23" cy="25" r=".35" fill="#c9a35e" opacity=".7"/></pattern>
+<path id="fabric" d="M-45 300C115 242 62 111 179 90S338 57 420-35L260-38C155 47 127 4 70 48S66 189-45 226Z"/>
+</defs>
+<use href="#fabric" fill="url(#silk)"/><use href="#fabric" fill="url(#dust)" opacity=".5"/>
+<path d="M-45 300C115 242 62 111 179 90S338 57 420-35" stroke="url(#edge)" stroke-width="1.2"/>
+<path d="M-45 226C66 189 13 92 70 48S155 47 260-38" stroke="url(#edge)" stroke-width=".85"/>
+<path d="M-45 281C101 221 53 99 167 77S310 42 390-35M-45 266C84 218 32 87 110 60S246 40 333-35" stroke="#ecd39f" stroke-opacity=".12" stroke-width=".5"/>
+<circle cx="91" cy="164" r="2" fill="#fbf3e5"/><path d="M91 154v20m-10-10h20" stroke="#ecd39f" stroke-width=".6"/>
+</svg>

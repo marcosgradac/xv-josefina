@@ -51,7 +51,7 @@ export const EVENT: EventConfig = {
   quote: 'Mi noche soñada está llegando, y quiero que seas parte...',
   scrollIndicatorText: 'Sigue aquí...',
   coverEyebrow: 'Tienes una invitación especial',
-  coverKicker: 'Mis 15',
+  coverKicker: 'Mis maravillosos',
   coverTitle: 'XV',
   coverMessage: 'Una noche mágica comienza con una invitación...',
   eventDate: '2027-01-16T21:30:00-03:00',
@@ -69,15 +69,19 @@ export const EVENT: EventConfig = {
   itinerary: [
     { time: '21:30', title: 'Cena', description: '', icon: 'dinner', color: '#ffffff' },
     { time: '23:30', title: 'Muchas sorpresas', description: '', icon: 'music', color: '#ffffff' },
-    { time: '12:00', title: 'Bals y que empiece la fiesta', description: '', icon: 'party', color: '#ffffff' },
+    { time: '00:00', title: 'Vals y que empiece la fiesta', description: '', icon: 'party', color: '#ffffff' },
   ],
   gallery: [
     {
-      url: '/assets/images/gallery1.webp',
+      url: '/assets/images/josefina-galeria-1.jpeg',
       caption: '',
     },
     {
-      url: '/assets/images/gallery2.webp',
+      url: '/assets/images/josefina-galeria-2.jpeg',
+      caption: '',
+    },
+    {
+      url: '/assets/images/josefina-galeria-3.jpeg',
       caption: '',
     },
   ],
