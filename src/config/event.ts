@@ -51,7 +51,7 @@ export const EVENT: EventConfig = {
   quote: 'Mi noche soñada está llegando, y quiero que seas parte...',
   scrollIndicatorText: 'Sigue aquí...',
   coverEyebrow: 'Tienes una invitación especial',
-  coverKicker: 'Mis maravillosos',
+  coverKicker: 'Mis 15',
   coverTitle: 'XV',
   coverMessage: 'Una noche mágica comienza con una invitación...',
   eventDate: '2027-01-16T21:30:00-03:00',
