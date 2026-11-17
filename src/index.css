@@ -1,0 +1,38 @@
+:root {
+  --bg: #050505;
+  --surface: #10100f;
+  --gold: #c9a35e;
+  --gold-light: #ecd39f;
+  --gold-line: rgba(201, 163, 94, 0.52);
+  --text-light: #fbf3e5;
+  --subtitle-light: #f6efe8;
+  --text-dim: rgba(251, 243, 229, 0.62);
+  --script: 'Great Vibes', cursive;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Montserrat', 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text-light); font-family: var(--sans); overflow-x: hidden; }
+button, input, textarea, select { font: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 4px;
+}
+#root { min-height: 100vh; background: var(--bg); }
+.playfair { font-family: var(--serif); }
+.script-heading { font-family: var(--script); font-weight: 400; }
+.montserrat { font-family: var(--sans); }
+.text-gold { color: var(--gold); }
+.text-light { color: var(--text-light); }
+.text-dim { color: var(--text-dim); }
+.bg-gold { background-color: var(--gold); }
+.uppercase-tracking { text-transform: uppercase; letter-spacing: 0.4em; }
+.fade-in { animation: fadeIn 1.7s ease-out forwards; }
+.fade-up { animation: fadeUp 1.7s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; } }
+.animate-ping { animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
