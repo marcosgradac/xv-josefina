@@ -16,7 +16,7 @@ export default function ItinerarySection({ ref }: { ref: React.Ref<HTMLDivElemen
       <div className="program-star program-star-three" aria-hidden="true">✦</div>
       <div className="program-star program-star-four" aria-hidden="true">✧</div>
       <Box className="program-content">
-        <Typography variant="caption" component="p" className="section-eyebrow">
+        <Typography variant="caption" component="p" className="section-eyebrow program-eyebrow">
           Cada momento será especial
         </Typography>
         <Typography

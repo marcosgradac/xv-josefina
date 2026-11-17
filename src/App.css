@@ -34,7 +34,8 @@
 .program-section { position: relative; display: grid; align-items: center; min-height: 100svh; margin-bottom: clamp(10rem, 30vw, 13rem); padding: clamp(3.75rem, 7vw, 5rem) clamp(1.25rem, 5vw, 4rem); overflow: hidden; isolation: isolate; background: #000; color: var(--text-light); }
 .program-section::before { content: ''; position: absolute; inset: 0; z-index: 0; opacity: 0.6; pointer-events: none; background-image: radial-gradient(circle, rgba(236, 211, 159, 0.78) 0 1px, transparent 1.5px), radial-gradient(circle, rgba(201, 163, 94, 0.6) 0 1px, transparent 1.8px); background-position: 8% 14%, 75% 36%; background-size: 127px 127px, 247px 247px; }
 .program-content { position: relative; z-index: 1; width: min(100%, 34rem); margin: 0 auto; }
-.program-heading { margin: 0.3rem 0 0; color: var(--gold-light); font-family: var(--script); font-size: clamp(2rem, 9vw, 2.65rem); font-weight: 400; line-height: 1.15; text-align: center; white-space: nowrap; }
+.program-eyebrow { max-width: 18rem; margin: 0 auto clamp(1.1rem, 4vw, 1.45rem); letter-spacing: clamp(0.2em, 1vw, 0.32em); }
+.program-heading { margin: 0; color: var(--gold-light); font-family: var(--script); font-size: clamp(2rem, 9vw, 2.65rem); font-weight: 400; line-height: 1.15; text-align: center; white-space: nowrap; }
 .program-timeline { position: relative; display: grid; gap: clamp(1.05rem, 2.8vw, 1.55rem); margin: clamp(1.55rem, 3.8vw, 2.25rem) 0 0; padding: 0; list-style: none; }
 .program-timeline-line { position: absolute; top: 0.4rem; bottom: 0.4rem; left: clamp(1.1rem, 5vw, 2.2rem); width: clamp(2.25rem, 11vw, 4.5rem); height: calc(100% - 0.8rem); overflow: visible; }
 .program-timeline-line path { fill: none; stroke: var(--gold); stroke-width: 2.1; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(201, 163, 94, 0.52)); }
