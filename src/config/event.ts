@@ -60,7 +60,7 @@ export const EVENT: EventConfig = {
   eventTime: '21:30',
   venueName: 'Salón Atahualpa',
   venueAddress: 'Río Tercero, Córdoba, Argentina',
-  mapsUrl: 'https://www.google.com/maps',
+  mapsUrl: 'https://www.google.com/maps/place/ATAHUALPA+Sal%C3%B3n+de+Eventos/@-32.1603461,-64.1581618,17z/data=!3m1!4b1!4m6!3m5!1s0x95cd677c8ccb66d5:0xb255ecc4f3edf6b7!8m2!3d-32.1603461!4d-64.1581618!16s%2Fg%2F11vbs1fj76?entry=ttu&g_ep=EgoyMDI2MTExNS4wIKXMDSoASAFQAw%3D%3D',
   alias: 'Jbarela2048.nx.ars',
   bankName: 'Naranja x',
   accountHolder: 'Barela Josefina',
