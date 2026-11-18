@@ -59,7 +59,11 @@ function GoldDivider({ heart = false }: { heart?: boolean }) {
 
 export default function HeroSection({ ref, onScrollTo }: { ref: Ref<HTMLDivElement>; onScrollTo: (id: string) => void }) {
   return <Box component="section" ref={ref} id="hero" tabIndex={-1} className="luxury-hero" aria-labelledby="hero-name">
-    <GoldParticles/><LuxuryRibbon/><LuxuryRibbon bottom/>
+    <GoldParticles/>
+    <div className="hero-ribbon-clip" aria-hidden="true">
+      <LuxuryRibbon/>
+      <LuxuryRibbon bottom/>
+    </div>
     <div className="hero-edge" aria-hidden="true"/>
     <div className="hero-composition">
       <div className="hero-crown hero-reveal" aria-hidden="true"><span className="hero-crown-shape"/><span className="hero-jewel hero-jewel-one">✦</span><span className="hero-jewel hero-jewel-two">✦</span><span className="hero-jewel hero-jewel-three">✦</span></div>

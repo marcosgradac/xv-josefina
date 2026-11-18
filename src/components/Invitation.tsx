@@ -28,50 +28,13 @@ export default function Invitation() {
   const musicRef = useRef<MusicPlayerHandle>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [musicMenuItem, setMusicMenuItem] = useState<HTMLLIElement | null>(null);
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (isOpen) {
-      document.getElementById('hero')?.focus();
+      document.getElementById('hero')?.focus({ preventScroll: true });
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const activeEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (!activeEntry) return;
-
-        const index = sections.findIndex((section) => section.id === activeEntry.target.id);
-        if (index >= 0) setCurrentSectionIndex(index);
-      },
-      { rootMargin: '-40% 0px -50% 0px', threshold: 0.05 },
-    );
-
-    sections.forEach(({ id }) => {
-      const section = sectionRefs.current[id];
-      if (section) observer.observe(section);
-    });
-
-    return () => observer.disconnect();
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const section = sectionRefs.current[sections[currentSectionIndex]?.id];
-    if (!section) return;
-
-    section.classList.remove('section-arrival');
-    void section.offsetWidth;
-    section.classList.add('section-arrival');
-    const timeout = window.setTimeout(() => section.classList.remove('section-arrival'), 800);
-    return () => window.clearTimeout(timeout);
-  }, [currentSectionIndex, isOpen]);
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
