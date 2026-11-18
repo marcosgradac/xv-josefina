@@ -18,6 +18,7 @@ export interface EventConfig {
   alias: string;
   bankName: string;
   accountHolder: string;
+  giftContact: string;
   digitalEnvelopeTitle: string;
   envelopeRainTitle: string;
   musicUrl: string;
@@ -61,9 +62,10 @@ export const EVENT: EventConfig = {
   venueName: 'Salón Atahualpa',
   venueAddress: 'Río Tercero, Córdoba, Argentina',
   mapsUrl: 'https://www.google.com/maps/place/ATAHUALPA+Sal%C3%B3n+de+Eventos/@-32.1603461,-64.1581618,17z/data=!3m1!4b1!4m6!3m5!1s0x95cd677c8ccb66d5:0xb255ecc4f3edf6b7!8m2!3d-32.1603461!4d-64.1581618!16s%2Fg%2F11vbs1fj76?entry=ttu&g_ep=EgoyMDI2MTExNS4wIKXMDSoASAFQAw%3D%3D',
-  alias: 'Jbarela2048.nx.ars',
+  alias: 'finatin',
   bankName: 'Naranja x',
-  accountHolder: 'Barela Josefina',
+  accountHolder: 'Natali Vanesa Ramos',
+  giftContact: '3571 310953',
   digitalEnvelopeTitle: 'Sobre Digital',
   envelopeRainTitle: 'Lluvia de Sobres',
   musicUrl: '/assets/audio/background.mp3',

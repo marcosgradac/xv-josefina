@@ -27,7 +27,12 @@ export default function GiftRegistrySection({ref,onScrollTo}:{ref:Ref<HTMLDivEle
     <div className="jewel-content" ref={content}>
       <header className="jewel-header"><p className="jewel-eyebrow">Un detalle especial</p><h2 id="jewel-title">{EVENT.giftHeading}</h2><JewelDivider/><p className="jewel-message">{EVENT.giftMessage}</p></header>
       <article className="jewel-card jewel-bank"><h3>{EVENT.digitalEnvelopeTitle}</h3><div className="jewel-card-emblem"><span/><Envelope dark/><span/></div>
-        <dl className="jewel-bank-data"><div><dt>Banco</dt><dd>{EVENT.bankName}</dd></div><div className="jewel-alias"><dt>ALIAS</dt><dd>{EVENT.alias}</dd></div><div><dt>Beneficiario</dt><dd>{EVENT.accountHolder}</dd></div></dl>
+        <dl className="jewel-bank-data">
+          <div className="jewel-alias"><dt>Alias</dt><dd>{EVENT.alias}</dd></div>
+          <div><dt>Titular</dt><dd>{EVENT.accountHolder}</dd></div>
+          <div><dt>Entidad</dt><dd>{EVENT.bankName}</dd></div>
+          <div><dt>Contacto</dt><dd>{EVENT.giftContact}</dd></div>
+        </dl>
         <Button className={`jewel-gold-button jewel-copy${copyState==='success'?' jewel-copy-success':''}`} onClick={copy} disabled={copyState==='pending'}>{copyState==='success'?'¡ALIAS COPIADO!':copyState==='pending'?'COPIANDO...':'COPIAR ALIAS'}</Button>
         <p className={`jewel-copy-status${copyState==='error'?' jewel-copy-error':''}`} role="status" aria-live="polite">{copyState==='success'?'Alias copiado al portapapeles.':copyState==='error'?'No se pudo copiar el ALIAS. Seleccioná el texto para copiarlo manualmente.':'\u00a0'}</p>
       </article>
