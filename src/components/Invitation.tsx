@@ -9,6 +9,7 @@ import GiftRegistrySection from './GiftRegistrySection';
 import LocationSection from './LocationSection';
 import HeroSection from './HeroSection';
 import CoverSection from './CoverSection';
+import RSVPSection from './RSVPSection';
 import '../App.css';
 
 const sections = [
@@ -19,6 +20,7 @@ const sections = [
   { id: 'details', label: 'Detalles' },
   { id: 'gifts', label: 'Mesa de regalos' },
   { id: 'location', label: 'Ubicación' },
+  { id: 'rsvp', label: 'Confirmación' },
 ];
 
 export default function Invitation() {
@@ -179,6 +181,7 @@ export default function Invitation() {
           ref={(el) => { sectionRefs.current.location = el; }}
           onScrollTo={(id) => scrollToSection(id)}
         />
+        <RSVPSection ref={(el) => { sectionRefs.current.rsvp = el; }} />
       </Box>
     </Box>
   );

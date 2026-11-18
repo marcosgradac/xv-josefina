@@ -20,7 +20,7 @@ npm run preview
 
 - Portada animada y programa del evento
 - Galería, cuenta regresiva, detalles y ubicación
-- Mesa de regalos y confirmación local de asistencia
+- Mesa de regalos y confirmación de asistencia conectada a Supabase
 - Diseño adaptable a móviles y escritorio
 
-Los datos y textos del evento están centralizados en `src/config/event.ts`. La confirmación de asistencia es una vista previa local y no guarda ni envía respuestas.
+Los datos y textos del evento están centralizados en `src/config/event.ts`. La confirmación usa la Edge Function submit-rsvp del proyecto Supabase existente. El panel privado está en `/admin`. Seguí los pasos de `RSVP_SETUP.md`; no ejecutar las migraciones antiguas sobre el servidor actual.

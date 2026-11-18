@@ -1,3 +1,4 @@
+import { TARIFFS } from './pricing';
 export interface EventConfig {
   names: string;
   subtitle: string;
@@ -86,9 +87,9 @@ export const EVENT: EventConfig = {
     },
   ],
   details: [
-    { icon: 'info', label: 'Tarjeta Mayores', value: '$60000' },
-    { icon: 'info', label: 'Tarjeta Adolescente (14 a 17 años)', value: '$40000' },
-    { icon: 'info', label: 'Tarjeta Menores (5 a 13 años)', value: '$25000' },
+    { icon: 'info', label: 'Tarjeta Mayores', value: `$${TARIFFS.adults.price}` },
+    { icon: 'info', label: 'Tarjeta Adolescente (14 a 17 años)', value: `$${TARIFFS.teens.price}` },
+    { icon: 'info', label: 'Tarjeta Menores (5 a 13 años)', value: `$${TARIFFS.children.price}` },
     { icon: 'info', label: 'Tarjeta menores de 5 años no pagan.', value: 'No pagan' },
   ],
   giftMessage:
@@ -99,8 +100,8 @@ export const EVENT: EventConfig = {
   rsvpEyebrow: 'Tu presencia hará la diferencia',
   rsvpStory: 'Confirma tu asistencia para que podamos prepararlo todo con cariño.',
   rsvpPassDateTime: 'Sábado 16 de enero de 2027 · 21:30',
-  rsvpConfirmedMessage: 'Vista previa local: tu confirmación no se envía a Josefina ni al anfitrión y no persistirá al salir o recargar la página.',
-  rsvpDeclinedMessage: 'Vista previa local: esta respuesta no se envía a Josefina ni al anfitrión y no persistirá al salir o recargar la página.',
+  rsvpConfirmedMessage: '¡Gracias por confirmar! Tu asistencia quedó registrada.',
+  rsvpDeclinedMessage: 'Gracias por avisarnos. Tu respuesta quedó registrada.',
   closingTitle: 'Quiero ver las fotos de mí noche especial!',
   closingPrompt: 'Junto a tu foto utiliza esta descripción',
   closingHashtag: '#misXVJosefina',

@@ -1,63 +1,36 @@
-import { useState, type FormEvent, type Ref } from 'react';
-import { Box, Button, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, TextField, Typography } from '@mui/material';
+import { useRef, useState, type FormEvent, type Ref } from 'react';
+import { Box } from '@mui/material';
 import { EVENT } from '../config/event';
+import { CATEGORIES, TARIFFS, emptyCounts, money, normalizePhone, totalAmount, totalPeople, validateContact, type Counts } from '../config/pricing';
+import { requireBackend, errorMessage } from '../lib/backend';
 
-type ResponseState = 'confirmed' | 'declined' | null;
-const countryCodes = [
-  { value: '+54', label: 'Argentina +54' }, { value: '+55', label: 'Brasil +55' }, { value: '+56', label: 'Chile +56' },
-  { value: '+57', label: 'Colombia +57' }, { value: '+52', label: 'México +52' }, { value: '+598', label: 'Uruguay +598' },
-];
-
-export default function RSVPSection({ ref }: { ref: Ref<HTMLDivElement> }) {
-  const [form, setForm] = useState({ name: '', countryCode: '+54', phone: '', guests: 1, song: '' });
-  const [response, setResponse] = useState<ResponseState>(null);
-  const [validationMessage, setValidationMessage] = useState('');
-  const handleConfirm = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!form.name.trim() || !form.phone.trim()) { setValidationMessage('Por favor, completa tu nombre y teléfono para confirmar.'); setResponse(null); return; }
-    setValidationMessage(''); setResponse('confirmed');
-  };
-  const handleDecline = () => { setValidationMessage(''); setResponse('declined'); };
-
-  return <Box ref={ref} id="rsvp" component="section" className="invitation-section" sx={sectionSx}>
-    <Box sx={overlaySx} />
-    <Box sx={contentSx}>
-      <Typography variant="caption" component="div" sx={eyebrowSx}>{EVENT.rsvpEyebrow}</Typography>
-      <Typography variant="h2" component="h2" className="script-heading" sx={headingSx}>{EVENT.rsvpTitle}</Typography>
-      <Typography component="p" sx={bodySx}>{EVENT.rsvpStory}</Typography>
-      <Paper sx={passSx}><Typography component="p" sx={{ color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.18em', fontSize: '0.73rem', m: 0 }}>Pase de invitación</Typography><Typography component="p" className="playfair" sx={{ color: 'var(--text-light)', fontSize: { xs: '1.15rem', sm: '1.35rem' }, m: '0.5rem 0 0' }}>{EVENT.rsvpPassDateTime}</Typography></Paper>
-      <Paper sx={formPaperSx}>
-        <Box component="form" noValidate onSubmit={handleConfirm} sx={{ display: 'grid', gap: 2 }}>
-          <TextField required fullWidth label="Nombre completo" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} sx={fieldSx} />
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '180px 1fr' }, gap: 1.5 }}>
-            <FormControl fullWidth sx={fieldSx}><InputLabel id="country-code-label">Código</InputLabel><Select labelId="country-code-label" label="Código" value={form.countryCode} onChange={(event) => setForm({ ...form, countryCode: event.target.value })}>{countryCodes.map((country) => <MenuItem key={country.value} value={country.value}>{country.label}</MenuItem>)}</Select></FormControl>
-            <TextField required fullWidth type="tel" label="Teléfono" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} sx={fieldSx} />
-          </Box>
-          <Box sx={guestStepperSx}><Typography component="span" sx={{ color: 'var(--text-light)' }}>Cantidad de invitados</Typography><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><IconButton aria-label="Restar un invitado" disabled={form.guests === 1} onClick={() => setForm({ ...form, guests: Math.max(1, form.guests - 1) })} sx={stepperButtonSx}>−</IconButton><Typography aria-live="polite" component="span" sx={{ color: 'var(--gold-light)', minWidth: '1.5rem', textAlign: 'center', fontWeight: 700 }}>{form.guests}</Typography><IconButton aria-label="Sumar un invitado" onClick={() => setForm({ ...form, guests: form.guests + 1 })} sx={stepperButtonSx}>+</IconButton></Box></Box>
-          <TextField fullWidth label="Petición de canción" value={form.song} onChange={(event) => setForm({ ...form, song: event.target.value })} sx={fieldSx} />
-          {validationMessage && <Typography role="alert" component="p" sx={validationSx}>{validationMessage}</Typography>}
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1.25 }}><Button className="gold-control" type="submit" sx={confirmButtonSx}>Confirmar</Button><Button className="gold-control" type="button" variant="outlined" onClick={handleDecline} sx={declineButtonSx}>No puedo asistir</Button></Box>
-        </Box>
-        {response && <Typography aria-live="polite" role="status" component="p" sx={responseSx}>{response === 'confirmed' ? EVENT.rsvpConfirmedMessage : EVENT.rsvpDeclinedMessage}</Typography>}
-      </Paper>
-      <Typography component="p" sx={localNoticeSx}>Vista previa local: esta respuesta no se envía a Josefina ni al anfitrión y se perderá al salir o recargar la página.</Typography>
-    </Box>
-  </Box>;
+import GuestCounts from './GuestCounts';
+import AttendanceConfirmation from './AttendanceConfirmation';
+import type { SubmissionInput } from '../types/supabase';
+import './RSVPSection.css';
+const countries=[['+54','Argentina +54'],['+55','Brasil +55'],['+56','Chile +56'],['+57','Colombia +57'],['+52','México +52'],['+598','Uruguay +598']];
+export default function RSVPSection({ref}:{ref:Ref<HTMLDivElement>}) {
+  const [name,setName]=useState('');const [country,setCountry]=useState('+54');const [phone,setPhone]=useState('');const [song,setSong]=useState('');
+  const [counts,setCounts]=useState<Counts>(emptyCounts);
+  const [step,setStep]=useState<'form'|'review'|'done'>('form');
+  const [attending,setAttending]=useState(true);const [pending,setPending]=useState(false);const [error,setError]=useState('');const [receipt,setReceipt]=useState('');
+  const [confirmationOpen,setConfirmationOpen]=useState(false);
+  const [serverTotals,setServerTotals]=useState<{guests:number;amount:number}|null>(null);
+  const busy=useRef(false);const request=useRef<{payload:string;key:string}|null>(null);
+  const prices=Object.fromEntries(CATEGORIES.map(key=>[key,TARIFFS[key].price])) as Record<keyof Counts,number>;
+  const displayPrices=prices;
+  const normalized=normalizePhone(country,phone);const guests=attending?totalPeople(counts):0;const amount=attending?totalAmount(counts,prices):0;
+  function review(willAttend:boolean){setError('');const validation=validateContact(name,normalized);if(validation){setError(validation);return;}if(willAttend&&(totalPeople(counts)<1||totalPeople(counts)>100)){setError('Indicá entre 1 y 100 asistentes, incluyendo al responsable si asistirá.');return;}setAttending(willAttend);setStep('review');}
+  async function send(event:FormEvent){event.preventDefault();if(busy.current)return;busy.current=true;setPending(true);setError('');
+    try{const values=attending?counts:emptyCounts();const payload:Omit<SubmissionInput,'client_request_id'>={full_name:name.trim(),phone_country_code:country,phone_number:phone.replace(/[\s().-]/g,''),song_request:attending?song.trim():null,attendance_status:attending?'confirmed':'declined',adults_count:values.adults,teens_count:values.teens,children_count:values.children,under_five_count:values.infants};const fingerprint=JSON.stringify(payload);if(!request.current||request.current.payload!==fingerprint)request.current={payload:fingerprint,key:crypto.randomUUID()};
+      const {data,error:failure}=await requireBackend().functions.invoke('submit-rsvp',{body:{...payload,client_request_id:request.current.key}});if(failure){if('context' in failure && failure.context instanceof Response){try{const detail=await failure.context.clone().json();if(typeof detail.error==='string')throw new Error(detail.error);if(typeof detail.message==='string')throw new Error(detail.message);}catch(parsed){if(parsed instanceof Error && !(parsed instanceof SyntaxError))throw parsed;}}throw failure;}if(data?.ok!==true||typeof data.id!=='string'||!data.id||!Number.isSafeInteger(data.total_guests)||data.total_guests<0||!Number.isFinite(data.total_amount)||data.total_amount<0)throw new Error('No se recibió la confirmación del servidor. Podés reintentar sin duplicar el envío.');setServerTotals({guests:data.total_guests,amount:data.total_amount});setReceipt(data.id);setStep('done');if(attending)setConfirmationOpen(true);
+    }catch(failure){setError(errorMessage(failure));}finally{busy.current=false;setPending(false);}
+  }
+  return <Box ref={ref} id="rsvp" component="section" className="rsvp-system public-rsvp" aria-labelledby="rsvp-title"><div className="rsvp-content"><p className="rsvp-eyebrow">Tu presencia hará la diferencia</p><h2 id="rsvp-title">¿Nos acompañás?</h2><p>Nos encantará compartir esta noche con vos.</p>
+    <div className="invitation-pass"><span>PASE DE INVITACIÓN</span><strong>{EVENT.names}</strong><p>{EVENT.eventDateLabel} · {EVENT.eventTime} hs</p><div aria-hidden="true">✦ · ✦</div></div>
+    {step==='done'?<div className="rsvp-panel" role="status"><h3>{attending?'¡Gracias por confirmar!':'Gracias por avisarnos'}</h3><p>{attending?'Tu asistencia quedó registrada. Nos encantará compartir esta noche especial con vos.':'Registramos que no podrán asistir.'}</p>{attending&&<p>{serverTotals?.guests} personas · Total a abonar: {money(serverTotals?.amount??0)}</p>}<p className="form-hint">Comprobante: {receipt}</p><p>Para corregir una respuesta, contactá al anfitrión.</p></div>:step==='review'?<form className="rsvp-panel" onSubmit={send}><h3>Revisá tu respuesta</h3><dl className="review-details"><dt>Responsable</dt><dd>{name.trim()}</dd><dt>Teléfono</dt><dd>{normalized}</dd><dt>Asistencia</dt><dd>{attending?'Confirmada':'No asiste'}</dd><dt>Personas</dt><dd>{guests}</dd>{attending&&CATEGORIES.map(key=><div key={key}><dt>{TARIFFS[key].label}</dt><dd>{counts[key]} · {money(counts[key]*prices[key])}</dd></div>)}<dt>Canción</dt><dd>{attending&&song.trim()||'Sin petición'}</dd>{attending&&<><dt>Total</dt><dd className="rsvp-total">{money(amount)}</dd></>}</dl>{attending&&<p className="form-hint">El importe corresponde a las tarjetas de los asistentes. La confirmación de asistencia no implica que el pago ya se haya realizado.</p>}{error&&<p role="alert" className="form-error">{error}</p>}<div className="form-actions"><button className="rsvp-primary" disabled={pending} type="submit">{pending?'Guardando…':attending?'CONFIRMAR ASISTENCIA':'REGISTRAR QUE NO ASISTIRÉ'}</button><button disabled={pending} type="button" onClick={()=>setStep('form')}>Corregir datos</button></div></form>:<form className="rsvp-panel" onSubmit={event=>{event.preventDefault();review(true);}}>
+      <label>Nombre completo<input required autoComplete="name" maxLength={120} value={name} onChange={e=>setName(e.target.value)}/></label><div className="contact-grid"><label>Código de país<select value={country} onChange={e=>setCountry(e.target.value)}>{countries.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label>Teléfono<input required type="tel" inputMode="tel" autoComplete="tel-national" maxLength={24} value={phone} onChange={e=>setPhone(e.target.value)}/></label></div><p className="form-hint">Número sin el 0 ni el 15 local. Guardaremos el código de país junto al teléfono.</p>
+      <GuestCounts counts={counts} onChange={setCounts} prices={displayPrices}/><div className="rsvp-calculation"><span>{totalPeople(counts)} personas</span><strong>{money(totalAmount(counts,displayPrices))}</strong></div><p className="form-hint">Importe estimado según las tarifas de la invitación. El servidor calcula el total definitivo.</p>
+      <label>Petición de canción <small>(opcional)</small><input maxLength={500} placeholder="Canción y artista" value={song} onChange={e=>setSong(e.target.value)}/></label>{error&&<p className="form-error" role="alert">{error}</p>}<div className="form-actions"><button className="rsvp-primary" type="submit">Revisar confirmación</button><button type="button" disabled={!prices} onClick={()=>review(false)}>NO PUEDO ASISTIR</button></div><p className="form-hint">Usaremos tu nombre, teléfono y respuesta solo para organizar la celebración y sus tarjetas. Los datos de contacto son privados.</p></form>}
+  </div>{serverTotals&&<AttendanceConfirmation open={confirmationOpen} amount={serverTotals.amount} guests={serverTotals.guests} onClose={()=>setConfirmationOpen(false)}/>}</Box>;
 }
-
-const sectionSx = { minHeight: '100vh', position: 'relative', display: 'flex', alignItems: 'center', px: { xs: 2.5, sm: 4 }, py: 6, backgroundColor: 'var(--bg)' };
-const overlaySx = { position: 'absolute', inset: 0, background: 'rgba(5, 5, 5, 0.8)' };
-const contentSx = { position: 'relative', zIndex: 1, maxWidth: 650, width: '100%', mx: 'auto', textAlign: 'center' };
-const eyebrowSx = { color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.25em', fontFamily: 'var(--sans)', fontSize: '0.73rem', mb: 1 };
-const headingSx = { color: 'var(--gold-light)', fontSize: { xs: '3rem', sm: '4.25rem' }, fontWeight: 400, mb: 1 };
-const bodySx = { color: 'var(--subtitle-light)', lineHeight: 1.7, fontSize: { xs: '0.98rem', sm: '1.08rem' }, mb: 2.5 };
-const passSx = { background: 'rgba(16, 16, 15, 0.8)', border: '1px solid var(--gold-line)', borderRadius: 2, py: 1.75, px: 2, mb: 2 };
-const formPaperSx = { background: 'rgba(16, 16, 15, 0.84)', border: '1px solid var(--gold-line)', borderRadius: 2, p: { xs: 2, sm: 3 }, textAlign: 'left', backdropFilter: 'blur(10px)' };
-const fieldSx = { '& .MuiInputLabel-root': { color: 'var(--text-dim)' }, '& .MuiInputLabel-root.Mui-focused': { color: 'var(--gold-light)' }, '& .MuiOutlinedInput-root': { color: 'var(--text-light)', '& fieldset': { borderColor: 'var(--gold-line)' }, '&:hover fieldset': { borderColor: 'var(--gold)' }, '&.Mui-focused fieldset': { borderColor: 'var(--gold-light)' } }, '& .MuiSvgIcon-root': { color: 'var(--gold-light)' } };
-const guestStepperSx = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid var(--gold-line)', borderRadius: 1, px: 1.5, py: 0.5 };
-const stepperButtonSx = { color: 'var(--gold-light)', border: '1px solid var(--gold-line)', borderRadius: 1, '&:hover': { background: 'rgba(201, 163, 94, 0.12)' }, '&.Mui-disabled': { color: 'var(--text-dim)', borderColor: 'rgba(251, 243, 229, 0.16)' } };
-const validationSx = { color: '#ffcabd', m: 0, fontSize: '0.9rem' };
-const confirmButtonSx = { background: 'var(--gold)', color: 'var(--bg)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.13em', py: 1.1, '&:hover': { background: 'var(--gold-light)' } };
-const declineButtonSx = { borderColor: 'var(--gold)', color: 'var(--gold-light)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', '&:hover': { borderColor: 'var(--gold-light)', background: 'rgba(201, 163, 94, 0.12)' } };
-const responseSx = { color: 'var(--gold-light)', textAlign: 'center', lineHeight: 1.6, mb: 0, mt: 2.5 };
-const localNoticeSx = { color: 'var(--text-dim)', fontSize: '0.78rem', lineHeight: 1.55, mt: 1.5, mb: 0 };
