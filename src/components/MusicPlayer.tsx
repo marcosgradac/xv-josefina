@@ -1,115 +1,86 @@
-import { useEffect, useRef, useState } from 'react';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import { createPortal } from 'react-dom';
+import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded';
+import PauseRounded from '@mui/icons-material/PauseRounded';
 
-export default function MusicPlayer({
-  enabled,
-  playing,
-  onToggle,
-}: {
-  enabled: boolean;
-  playing: boolean;
-  onToggle: () => void;
+export type MusicPlayerHandle = { play: () => void };
+
+const volume = 0.3;
+const fadeDuration = 1300;
+
+export default function MusicPlayer({ ref, menuItem }: {
+  ref: Ref<MusicPlayerHandle>;
+  menuItem: HTMLLIElement | null;
 }) {
-  const ctxRef = useRef<AudioContext | null>(null);
-  const oscRef = useRef<OscillatorNode | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const fadeFrame = useRef(0);
+  const [playing, setPlaying] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
+
+  function play() {
+    const audio = audioRef.current;
+    if (!audio || !audio.paused) return;
+
+    cancelAnimationFrame(fadeFrame.current);
+    audio.volume = 0;
+    // Keep this call synchronous with the button press for mobile playback policies.
+    void audio.play().then(() => {
+      if (audio.paused || audioRef.current !== audio) return;
+      const startedAt = performance.now();
+      const fade = (now: number) => {
+        if (audio.paused || audioRef.current !== audio) return;
+        const progress = Math.min(1, (now - startedAt) / fadeDuration);
+        audio.volume = volume * progress;
+        if (progress < 1) fadeFrame.current = requestAnimationFrame(fade);
+      };
+      fadeFrame.current = requestAnimationFrame(fade);
+    }).catch(() => {
+      if (audioRef.current === audio) setPlaying(false);
+    });
+  }
+
+  useImperativeHandle(ref, () => ({ play }));
 
   useEffect(() => {
-    if (!enabled) {
-      ctxRef.current?.close();
-      ctxRef.current = null;
-      return;
-    }
-
-    const initAudio = async () => {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      ctxRef.current = ctx;
-
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(110, ctx.currentTime); // A2
-
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(isMuted ? 0 : 0.03, ctx.currentTime);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      oscRef.current = osc;
-      gainRef.current = gain;
-
-      if (playing && !isMuted) {
-        osc.start();
-      }
-    };
-
-    initAudio();
+    const audio = audioRef.current;
     return () => {
-      oscRef.current?.stop();
-      oscRef.current = null;
-      gainRef.current = null;
-      ctxRef.current?.close();
-      ctxRef.current = null;
+      cancelAnimationFrame(fadeFrame.current);
+      audio?.pause();
     };
-  }, [enabled, playing, isMuted]);
+  }, []);
 
-  useEffect(() => {
-    if (ctxRef.current && oscRef.current && gainRef.current) {
-      if (playing && !isMuted) {
-        oscRef.current.start();
-        gainRef.current.gain.setValueAtTime(0.03, ctxRef.current.currentTime);
-      } else {
-        gainRef.current.gain.setValueAtTime(0, ctxRef.current.currentTime);
-        oscRef.current.stop();
-      }
+  function toggle() {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      if (audio.error) audio.load();
+      setUnavailable(false);
+      play();
+    } else {
+      audio.pause();
     }
-  }, [playing, isMuted]);
+  }
 
-  const handleToggle = () => onToggle();
-
-  const handleMute = () => setIsMuted((prev) => {
-    const next = !prev;
-    if (gainRef.current) gainRef.current.gain.setValueAtTime(next ? 0 : 0.03, (ctxRef.current as AudioContext).currentTime);
-    return next;
-  });
-
-  if (!enabled) return null;
+  const label = playing ? 'Pausar música' : unavailable ? 'Reintentar reproducir música' : 'Reproducir música';
 
   return (
-    <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-      <Tooltip title={isMuted ? 'Activar sonido' : 'Silenciar sonido'}>
-        <IconButton
-          size="small"
-          onClick={handleMute}
-          sx={{
-            bgcolor: 'rgba(255,255,255,0.1)',
-            color: isMuted ? 'text.disabled' : 'primary',
-            '&:hover': { bgcolor: 'rgba(212,175,55,0.2)' },
-            border: '1px solid',
-            borderColor: 'rgba(212,175,55,0.3)',
-          }}
-        >
-          {isMuted ? '🔇' : '🔊'}
-        </IconButton>
-      </Tooltip>
-      <Tooltip title={playing ? 'Pausar música' : 'Reproducir música'}>
-        <IconButton
-          size="small"
-          onClick={handleToggle}
-          sx={{
-            bgcolor: 'rgba(212,175,55,0.15)',
-            color: '#D4AF37',
-            '&:hover': { bgcolor: 'rgba(212,175,55,0.3)' },
-            border: '1px solid',
-            borderColor: '#D4AF37',
-          }}
-        >
-          {playing ? '⏸️' : '▶️'}
-        </IconButton>
-      </Tooltip>
-    </Box>
+    <>
+      <audio
+        ref={audioRef}
+        src={import.meta.env.BASE_URL + 'audio/josefina-love.mp3'}
+        preload="none"
+        loop
+        onPlaying={() => { setPlaying(true); setUnavailable(false); }}
+        onPause={() => { cancelAnimationFrame(fadeFrame.current); setPlaying(false); }}
+        onError={() => { cancelAnimationFrame(fadeFrame.current); setPlaying(false); setUnavailable(true); }}
+      />
+      {menuItem && createPortal(
+        <button type="button" className="section-menu-music" onClick={toggle}>
+          {playing ? <PauseRounded fontSize="small" /> : <PlayArrowRounded fontSize="small" />}
+          {label}
+        </button>,
+        menuItem,
+      )}
+    </>
   );
 }

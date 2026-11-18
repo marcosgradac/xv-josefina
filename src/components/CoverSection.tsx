@@ -11,14 +11,14 @@ function WelcomeEnvelope(){
     </g>
   </svg>;
 }
-export default function CoverSection({onOpen}:{onOpen:()=>void}) {
+export default function CoverSection({onStartOpen,onOpen}:{onStartOpen:()=>void;onOpen:()=>void}) {
   const [opening,setOpening]=useState(false);
   const started=useRef(false);
   const completed=useRef(false);
   const timer=useRef<number|undefined>(undefined);
   useEffect(()=>()=>window.clearTimeout(timer.current),[]);
   const finish=()=>{if(completed.current)return;completed.current=true;window.clearTimeout(timer.current);onOpen();};
-  const open=()=>{if(started.current)return;started.current=true;if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){finish();return;}setOpening(true);timer.current=window.setTimeout(finish,700);};
+  const open=()=>{if(started.current)return;started.current=true;onStartOpen();if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){finish();return;}setOpening(true);timer.current=window.setTimeout(finish,700);};
   return <main className={`welcome-cover${opening?' welcome-opening':''}`} aria-labelledby="welcome-title" onAnimationEnd={event=>{if(event.target===event.currentTarget&&event.animationName==='welcome-exit')finish();}}>
     <div className="welcome-particles" aria-hidden="true">{Array.from({length:26},(_,i)=><span key={i} className={i%6===0?'welcome-star':''} style={{left:`${(i*37+6)%97}%`,top:`${(i*23+8)%96}%`,'--welcome-duration':`${7+i%7}s`,'--welcome-delay':`${-i*1.37}s`} as CSSProperties}>{i%6===0?'✦':''}</span>)}</div>
     <div className="welcome-silk welcome-silk-top" aria-hidden="true"><img src="/assets/images/hero-silk.svg" alt=""/><span/></div><div className="welcome-silk welcome-silk-bottom" aria-hidden="true"><img src="/assets/images/hero-silk.svg" alt=""/><span/></div>

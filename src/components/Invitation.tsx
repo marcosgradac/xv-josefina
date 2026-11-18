@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Box, IconButton } from '@mui/material';
-import MusicPlayer from './MusicPlayer';
+import MusicPlayer, { type MusicPlayerHandle } from './MusicPlayer';
 import CountdownSection from './CountdownSection';
 import GallerySection from './GallerySection';
 import ItinerarySection from './ItinerarySection';
@@ -25,9 +25,9 @@ const sections = [
 
 export default function Invitation() {
   const [isOpen, setIsOpen] = useState(false);
-  const [musicEnabled, setMusicEnabled] = useState(false);
-  const [musicPlaying, setMusicPlaying] = useState(false);
+  const musicRef = useRef<MusicPlayerHandle>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [musicMenuItem, setMusicMenuItem] = useState<HTMLLIElement | null>(null);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -92,97 +92,86 @@ export default function Invitation() {
     [],
   );
 
-  const handleMusicToggle = () => {
-    setMusicEnabled(!musicEnabled);
-    if (!musicEnabled) {
-      setMusicPlaying(true);
-    } else {
-      setMusicPlaying(false);
-    }
-  };
-
   const handleNavigation = (id: string) => {
     setMenuOpen(false);
     scrollToSection(id);
   };
 
-  if (!isOpen) {
-    return <CoverSection onOpen={() => setIsOpen(true)} />;
-  }
-
   return (
-    <Box
-      className="invitation-shell"
-      sx={{
-        minHeight: '100vh',
-        backgroundColor: 'background',
-        color: 'text.primary',
-        position: 'relative',
-        overflowX: 'hidden',
-      }}
-    >
-      <MusicPlayer
-        enabled={musicEnabled}
-        playing={musicPlaying}
-        onToggle={handleMusicToggle}
-      />
-
-      <Box component="nav" className="section-menu" aria-label="Navegación de la invitación">
-        <IconButton
-          className="section-menu-toggle"
-          aria-label={menuOpen ? 'Cerrar menú de secciones' : 'Abrir menú de secciones'}
-          aria-expanded={menuOpen}
-          aria-controls="section-navigation-list"
-          onClick={() => setMenuOpen((open) => !open)}
+    <>
+      <MusicPlayer ref={musicRef} menuItem={musicMenuItem} />
+      {!isOpen ? (
+        <CoverSection onStartOpen={() => musicRef.current?.play()} onOpen={() => setIsOpen(true)} />
+      ) : (
+        <Box
+          className="invitation-shell"
+          sx={{
+            minHeight: '100vh',
+            backgroundColor: 'background',
+            color: 'text.primary',
+            position: 'relative',
+            overflowX: 'hidden',
+          }}
         >
-          <span aria-hidden="true">☰</span>
-        </IconButton>
-        {menuOpen && (
-          <Box component="ul" id="section-navigation-list" className="section-menu-list">
-            {sections.map((section) => (
-              <li key={section.id}>
-                <button type="button" onClick={() => handleNavigation(section.id)}>
-                  {section.label}
-                </button>
-              </li>
-            ))}
+          <Box component="nav" className="section-menu" aria-label="Navegación de la invitación">
+            <IconButton
+              className="section-menu-toggle"
+              aria-label={menuOpen ? 'Cerrar menú de secciones' : 'Abrir menú de secciones'}
+              aria-expanded={menuOpen}
+              aria-controls="section-navigation-list"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <span aria-hidden="true">☰</span>
+            </IconButton>
+            {menuOpen && (
+              <Box component="ul" id="section-navigation-list" className="section-menu-list">
+                {sections.map((section) => (
+                  <li key={section.id}>
+                    <button type="button" onClick={() => handleNavigation(section.id)}>
+                      {section.label}
+                    </button>
+                  </li>
+                ))}
+                <li ref={setMusicMenuItem} />
+              </Box>
+            )}
           </Box>
-        )}
-      </Box>
 
-      <Box
-        className="invitation-content"
-        sx={{ width: '100%', px: 0, py: 0, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
-      >
-        <HeroSection
-          ref={(el) => { sectionRefs.current.hero = el; }}
-          onScrollTo={(id) => scrollToSection(id)}
-        />
-        <ItinerarySection
-          ref={(el) => { sectionRefs.current.itinerary = el; }}
-        />
-        <GallerySection
-          ref={(el) => { sectionRefs.current.gallery = el; }}
-          onScrollTo={(id) => scrollToSection(id)}
-        />
-        <CountdownSection
-          ref={(el) => { sectionRefs.current.countdown = el; }}
-          onScrollTo={(id) => scrollToSection(id)}
-        />
-        <DetailsSection
-          ref={(el) => { sectionRefs.current.details = el; }}
-          onScrollTo={(id) => scrollToSection(id)}
-        />
-        <GiftRegistrySection
-          ref={(el) => { sectionRefs.current.gifts = el; }}
-          onScrollTo={(id) => scrollToSection(id)}
-        />
-        <LocationSection
-          ref={(el) => { sectionRefs.current.location = el; }}
-          onScrollTo={(id) => scrollToSection(id)}
-        />
-        <RSVPSection ref={(el) => { sectionRefs.current.rsvp = el; }} />
-      </Box>
-    </Box>
+          <Box
+            className="invitation-content"
+            sx={{ width: '100%', px: 0, py: 0, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+          >
+            <HeroSection
+              ref={(el) => { sectionRefs.current.hero = el; }}
+              onScrollTo={(id) => scrollToSection(id)}
+            />
+            <ItinerarySection
+              ref={(el) => { sectionRefs.current.itinerary = el; }}
+            />
+            <GallerySection
+              ref={(el) => { sectionRefs.current.gallery = el; }}
+              onScrollTo={(id) => scrollToSection(id)}
+            />
+            <CountdownSection
+              ref={(el) => { sectionRefs.current.countdown = el; }}
+              onScrollTo={(id) => scrollToSection(id)}
+            />
+            <DetailsSection
+              ref={(el) => { sectionRefs.current.details = el; }}
+              onScrollTo={(id) => scrollToSection(id)}
+            />
+            <GiftRegistrySection
+              ref={(el) => { sectionRefs.current.gifts = el; }}
+              onScrollTo={(id) => scrollToSection(id)}
+            />
+            <LocationSection
+              ref={(el) => { sectionRefs.current.location = el; }}
+              onScrollTo={(id) => scrollToSection(id)}
+            />
+            <RSVPSection ref={(el) => { sectionRefs.current.rsvp = el; }} />
+          </Box>
+        </Box>
+      )}
+    </>
   );
 }

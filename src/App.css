@@ -30,6 +30,8 @@
 .section-menu-list li + li { border-top: 1px solid rgba(201, 163, 94, 0.18); }
 .section-menu-list button { display: block; width: 100%; padding: 0.65rem 0.75rem; border: 0; color: var(--text-light); font: 0.76rem var(--sans); letter-spacing: 0.1em; text-align: left; text-transform: uppercase; background: transparent; cursor: pointer; }
 .section-menu-list button:hover, .section-menu-list button:focus-visible { color: var(--bg); outline: none; background: var(--gold-light); }
+.section-menu-list .section-menu-music { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; color: var(--gold-light); }
+.section-menu-list .section-menu-music:is(:hover, :focus-visible) { color: var(--bg); }
 
 .program-section { position: relative; display: grid; align-items: center; min-height: 100svh; margin-bottom: clamp(10rem, 30vw, 13rem); padding: clamp(3.75rem, 7vw, 5rem) clamp(1.25rem, 5vw, 4rem); overflow: hidden; isolation: isolate; background: #000; color: var(--text-light); }
 .program-section::before { content: ''; position: absolute; inset: 0; z-index: 0; opacity: 0.6; pointer-events: none; background-image: radial-gradient(circle, rgba(236, 211, 159, 0.78) 0 1px, transparent 1.5px), radial-gradient(circle, rgba(201, 163, 94, 0.6) 0 1px, transparent 1.8px); background-position: 8% 14%, 75% 36%; background-size: 127px 127px, 247px 247px; }
