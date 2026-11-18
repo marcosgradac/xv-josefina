@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { backend, requireBackend, errorMessage } from '../lib/backend';
-import { loadAdminData } from '../lib/adminData';
+import { loadAdminData, type RefundMovement } from '../lib/adminData';
 import { balance, paymentLabel, CATEGORIES, TARIFFS, emptyCounts, money, totalAmount, totalPeople, validateContact, type Counts, type Family, type Payment, type Attendance } from '../config/pricing';
 import GuestCounts from '../components/GuestCounts';
 import '../components/RSVPSection.css';
 import './AdminPage.css';
 import ManualPaymentDialog from './ManualPaymentDialog';
+import ArchiveFamilyDialog from './ArchiveFamilyDialog';
 const date=(value:string)=>new Date(value).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',dateStyle:'short',timeStyle:'short'});
 const attendanceLabel=(value:Attendance)=>value==='confirmed'?'CONFIRMADO':'NO ASISTE';
-type Data={families:Family[];payments:Payment[]};
+type Data={families:Family[];payments:Payment[];refunds:RefundMovement[]};
 
-function FamilyDetail({family,payments,onBack,onSaved}:{family:Family;payments:Payment[];onBack:()=>void;onSaved:()=>Promise<void>}) {
+function FamilyDetail({family,payments,onBack,onSaved,onArchived}:{family:Family;payments:Payment[];onBack:()=>void;onSaved:()=>Promise<void>;onArchived:()=>void}) {
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [edit,setEdit]=useState(false);const [review,setReview]=useState(false);
   const [name,setName]=useState(family.full_name);const [phone,setPhone]=useState(family.phone_number);const [country,setCountry]=useState(family.phone_country_code);const [song,setSong]=useState(family.song);
   const [attendance,setAttendance]=useState<Attendance>(family.attendance);const [counts,setCounts]=useState<Counts>({adults:family.adults,teens:family.teens,children:family.children,infants:family.infants});
@@ -28,7 +30,57 @@ function FamilyDetail({family,payments,onBack,onSaved}:{family:Family;payments:P
     {family.attendance==='confirmed'&&<div className="manual-payment-actions"><button type="button" disabled={current.due<=0||pending} onClick={()=>setPaymentMode('advance')}>REGISTRAR ADELANTO</button><button type="button" className="rsvp-primary" disabled={current.due<=0||pending} onClick={()=>setPaymentMode('full')}>CONFIRMAR PAGO COMPLETO</button></div>}
     {paymentMode&&<ManualPaymentDialog family={family} mode={paymentMode} onClose={()=>setPaymentMode(null)} onSaved={onSaved}/>}
     {message&&<p className="form-error" role="status">{message}</p>}
+    <div className="admin-archive-actions">
+      <button type="button" className="admin-archive-button" disabled={pending} onClick={() => setArchiveOpen(true)}>
+        Eliminar asistencia
+      </button>
+    </div>
+    {archiveOpen && <ArchiveFamilyDialog family={family} onClose={() => setArchiveOpen(false)} onArchived={onArchived}/>}
   </div></section>;
+}
+
+function PaymentHistory({ families, payments, refunds, onSelect }: Data & { onSelect: (id: string) => void }) {
+  const activeNames = new Map(families.map(family => [family.id, family.full_name]));
+  const archivedNames = new Map(refunds.map(refund => [refund.submission_id, refund.family_name]));
+  const entries = [
+    ...payments.map(payment => ({
+      key: 'payment-' + payment.id,
+      familyId: payment.response_id,
+      amount: payment.amount,
+      date: payment.created_at,
+      description: paymentLabel(payment.payment_method) + ' · ' + (payment.note || 'Sin observaciones'),
+      refund: false,
+    })),
+    ...refunds.map(refund => ({
+      key: 'refund-' + refund.id,
+      familyId: refund.submission_id,
+      amount: refund.amount,
+      date: refund.created_at,
+      description: 'DEVOLUCIÓN',
+      refund: true,
+    })),
+  ].sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
+
+  return (
+    <section>
+      <h2>Pagos registrados</h2>
+      <p>Para registrar un pago, abrí una familia en Confirmaciones.</p>
+      {entries.length === 0 ? <p>Todavía no hay pagos.</p> : (
+        <ul className="admin-payment-list">
+          {entries.map(entry => (
+            <li key={entry.key} className={entry.refund ? 'admin-refund-entry' : undefined}>
+              {activeNames.has(entry.familyId)
+                ? <button type="button" onClick={() => onSelect(entry.familyId)}>{activeNames.get(entry.familyId)}</button>
+                : <span>{archivedNames.get(entry.familyId) ?? 'Familia'}</span>}
+              <strong>{entry.refund ? '−' + money(Math.abs(entry.amount)) : money(entry.amount)}</strong>
+              <span>{date(entry.date)}</span>
+              <p>{entry.description}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
 }
 
 export default function AdminPage(){
@@ -56,14 +108,26 @@ export default function AdminPage(){
   const totals={people:confirmed.reduce((sum,item)=>sum+item.total_guests,0),amount:confirmed.reduce((sum,item)=>sum+item.total_amount,0),paid:families.reduce((sum,item)=>sum+item.amount_paid,0),due:families.reduce((sum,item)=>sum+balance(item).due,0),pending:confirmed.filter(item=>balance(item).due>0).length,unpaid:confirmed.filter(item=>item.payment_status==='pending').length,partial:confirmed.filter(item=>item.payment_status==='partial').length,paidFamilies:confirmed.filter(item=>item.payment_status==='paid').length};
   const visible=families.filter(item=>(item.full_name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())||item.phone.includes(search.replace(/[\s()-]/g,'')))&&(attendanceFilter==='all'||item.attendance===attendanceFilter)&&(payFilter==='all'||balance(item).status===payFilter)).sort((a,b)=>sort==='newest'?b.created_at.localeCompare(a.created_at):a.created_at.localeCompare(b.created_at));
   const family=selected?families.find(item=>item.id===selected):null;
+  function handleArchived(id: string) {
+    setData(current => current && {
+      ...current,
+      families: current.families.filter(item => item.id !== id),
+      payments: current.payments.filter(item => item.response_id !== id),
+    });
+    setSelected(null);
+    setTab('families');
+    void refresh();
+  }
   async function copySong(text:string){try{await navigator.clipboard.writeText(text);setCopied('Canción copiada.');}catch{setCopied('No se pudo copiar. Seleccioná el texto manualmente.');}}
   return <main className="rsvp-system admin-app"><header className="admin-header"><div><p className="rsvp-eyebrow">XV Josefina · privado</p><h1>Administración</h1></div>{user&&<button type="button" onClick={logout}>CERRAR SESIÓN</button>}</header>
     {!backend?<div className="rsvp-panel"><h2>Panel sin configurar</h2><p>Falta conectar Supabase. Seguí los pasos de configuración incluidos en el proyecto. No hay datos de ejemplo ni acceso público a confirmaciones.</p></div>:!authReady?<p role="status">Comprobando sesión…</p>:!user?<form className="rsvp-panel admin-login" onSubmit={login}><h2>Iniciar sesión</h2><label>Correo de administrador<input type="email" required autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Contraseña<input type={showPassword?'text':'password'} required autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></label><button type="button" aria-pressed={showPassword} onClick={()=>setShowPassword(value=>!value)}>{showPassword?'Ocultar contraseña':'Mostrar contraseña'}</button><button type="submit" className="rsvp-primary" disabled={loginBusy}>{loginBusy?'Ingresando…':'Ingresar'}</button>{error&&<p className="form-error" role="alert">{error}</p>}</form>:<>
     <div className="admin-refresh"><span>{loading?'Actualizando…':data?'Datos guardados en el servidor':'Sin información disponible'}</span><button type="button" disabled={loading} onClick={refresh}>Actualizar</button></div>{error&&<p className="form-error" role="alert">{error}</p>}
-    {!data?(!error&&<p role="status">Cargando información…</p>):family?<FamilyDetail key={`${family.id}-${family.updated_at}`} family={family} payments={familyPayments(family.id)} onBack={()=>setSelected(null)} onSaved={refresh}/>:<>
+    {!data?(!error&&<p role="status">Cargando información…</p>):family?<FamilyDetail key={`${family.id}-${family.updated_at}`} family={family} payments={familyPayments(family.id)} onBack={()=>setSelected(null)} onSaved={refresh} onArchived={() => handleArchived(family.id)}/>:<>
       {tab==='summary'&&<section><h2>Resumen</h2><div className="admin-stats">{[['Familias confirmadas',confirmed.length],['Total de invitados',totals.people],['Total a cobrar',money(totals.amount)],['Dinero cobrado',money(totals.paid)],['Saldo pendiente',money(totals.due)],['Familias con saldo',totals.pending],['Sin pagos',totals.unpaid],['Con adelantos',totals.partial],['Completamente pagadas',totals.paidFamilies],['No asiste',families.filter(item=>item.attendance==='declined').length],].map(([label,value])=><article key={label}><p>{label}</p><strong>{value}</strong></article>)}</div></section>}
       {tab==='families'&&<section><h2>Confirmaciones</h2><div className="admin-filters"><label>Buscar nombre o teléfono<input type="search" value={search} onChange={e=>setSearch(e.target.value)}/></label><label>Asistencia<select value={attendanceFilter} onChange={e=>setAttendanceFilter(e.target.value)}><option value="all">Todas</option><option value="confirmed">Confirmado</option><option value="declined">No asiste</option></select></label><label>Pago<select value={payFilter} onChange={e=>setPayFilter(e.target.value)}><option value="all">Todos</option>{['PENDIENTE DE PAGO','PAGO PARCIAL','PAGADO','NO APLICA'].map(value=><option key={value}>{value}</option>)}</select></label><label>Orden<select value={sort} onChange={e=>setSort(e.target.value)}><option value="newest">Más recientes primero</option><option value="oldest">Más antiguas primero</option></select></label></div><p>{visible.length} familias</p><div className="admin-family-list">{visible.map(item=>{const value=balance(item);return <button type="button" key={item.id} onClick={()=>setSelected(item.id)} className="admin-family-card"><strong>{item.full_name}</strong><span>{item.phone} · {item.total_guests} invitados</span><span>Asistencia: {attendanceLabel(item.attendance)}</span><span className={'payment-status payment-status--'+item.payment_status}>{value.status}</span><span>Total {money(item.total_amount)} · Abonado {money(value.paid)}</span><b>Falta cobrar: {money(value.due)}</b><small>{date(item.created_at)} · Ver detalle →</small></button>;})}</div>{visible.length===0&&<p>No hay familias que coincidan.</p>}</section>}
-      {tab==='payments'&&<section><h2>Pagos registrados</h2><p>Para registrar un pago, abrí una familia en Confirmaciones.</p><ul className="admin-payment-list">{payments.map(item=><li key={item.id}><button type="button" onClick={()=>setSelected(item.response_id)}>{families.find(f=>f.id===item.response_id)?.full_name??'Familia'}</button><strong>{money(item.amount)}</strong><span>{date(item.created_at)}</span><p>{paymentLabel(item.payment_method)} · {item.note||'Sin observaciones'}</p></li>)}</ul>{payments.length===0&&<p>Todavía no hay pagos.</p>}</section>}
+      {tab==='payments'&&(
+        <PaymentHistory families={families} payments={payments} refunds={data.refunds} onSelect={setSelected}/>
+      )}
       {tab==='songs'&&<section><h2>Canciones solicitadas</h2><p role="status">{copied}</p><ul className="admin-payment-list">{families.filter(item=>item.song.trim()).map(item=><li key={item.id}><strong>{item.song}</strong><p>{item.full_name} · {attendanceLabel(item.attendance)}</p><small>{date(item.created_at)}</small><button type="button" onClick={()=>copySong(item.song)}>Copiar canción</button></li>)}</ul>{!families.some(item=>item.song.trim())&&<p>No hay canciones solicitadas.</p>}</section>}
     </>}
     {data&&<nav className="admin-bottom-nav" aria-label="Panel administrador">{[['summary','Inicio'],['families','Familias'],['payments','Pagos'],['songs','Canciones']].map(([id,label])=><button type="button" key={id} aria-current={tab===id?'page':undefined} onClick={()=>{setTab(id);setSelected(null);}}>{label}</button>)}</nav>}

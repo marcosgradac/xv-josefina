@@ -7,7 +7,7 @@ assert.equal(totalPeople(counts),5);assert.equal(totalAmount(counts,Object.fromE
 assert.equal(totalAmount({adults:0,teens:0,children:0,infants:5},{adults:60000,teens:40000,children:25000,infants:0}),0);
 let allowed=true;const paths=[];
 const row={id:'test',full_name:'PRUEBA LOCAL',phone_country_code:'+54',phone_number:'3571000000',adults_count:2,teens_count:1,children_count:1,under_five_count:1,song_request:null,attendance_status:'confirmed',total_amount:185000,total_guests:5,created_at:'2026-11-17T00:00:00Z',updated_at:'2026-11-17T00:00:00Z',amount_paid:50000,balance_due:135000,payment_status:'partial'};
-const client=createClient('https://contract.example.test','public-test',{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:async(url)=>{const path=new URL(url).pathname;paths.push(path);const value=path.endsWith('my_admin_status')?allowed:path.endsWith('rsvp_dashboard')?[row]:path.endsWith('payments')?[]:null;assert.notEqual(value,null,'Unexpected endpoint '+path);return new Response(JSON.stringify(value),{status:200,headers:{'Content-Type':'application/json'}});}}});
+const client=createClient('https://contract.example.test','public-test',{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:async(url)=>{const path=new URL(url).pathname;paths.push(path);const value=path.endsWith('my_admin_status')?allowed:path.endsWith('rsvp_dashboard')?[row]:(path.endsWith('payments')||path.endsWith('rsvp_refunds'))?[]:null;assert.notEqual(value,null,'Unexpected endpoint '+path);return new Response(JSON.stringify(value),{status:200,headers:{'Content-Type':'application/json'}});}}});
 client.auth.getUser=async()=>({data:{user:{id:'test-admin'}},error:null});
 let result=await loadAdminData(client);assert.equal(result.families[0].phone,'+543571000000');assert.equal(result.families[0].infants,1);assert.equal(result.families[0].song,'');assert.deepEqual(balance(result.families[0]),{paid:50000,due:135000,status:'PAGO PARCIAL'});
 row.amount_paid=185000;row.balance_due=0;row.payment_status='paid';result=await loadAdminData(client);assert.deepEqual(balance(result.families[0]),{paid:185000,due:0,status:'PAGADO'});
@@ -38,3 +38,5 @@ await assert.rejects(recordManualPayment(paymentClient,payment('negative',-5)),/
 await assert.rejects(recordManualPayment(paymentClient,payment('advance-1',60000)),/datos diferentes/);
 live.balance_due=60000;loseResponse=true;try{await recordManualPayment(paymentClient,payment('lost-response',60000,'full'));}catch{}const before=writes;await recordManualPayment(paymentClient,payment('lost-response',60000,'full'));assert.equal(writes,before);assert.equal(live.balance_due,0);
 console.log('OK: adelantos 50000 + 30000, restante 105000, rechazo de saldo obsoleto, sin duplicados y recuperación de respuesta perdida. Contrato simulado.');
+
+await import('./test-archive-refund.mjs');

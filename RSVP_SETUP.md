@@ -22,14 +22,22 @@ Supabase JS está fijado a 2.119.0. La ruta /admin tiene rewrite para Vercel. Pa
 - Público: supabase.functions.invoke('submit-rsvp'). Envía client_request_id, full_name, phone_country_code, phone_number, adults_count, teens_count, children_count, under_five_count, song_request y attendance_status. No envía importes, precios ni total de personas. Reutiliza UUID para reintentar el mismo contenido y bloquea doble toque. Solo confirma cuando recibe ok:true, id y totales válidos del servidor.
 - Estimación visual: src/config/pricing.ts; valores 60000 / 40000 / 25000 / 0. La respuesta definitiva procede de la función.
 - Administración: Supabase Auth con contraseña manual, sesión persistente y my_admin_status() === true antes de descargar datos. Sin registro público ni enlace en el menú de invitados.
-- Consultas: rsvp_dashboard y payments, paginadas de 500 filas. Los saldos y estados se leen de amount_paid, balance_due y payment_status de la vista; no se recalculan desde el historial.
+- El panel obtiene las familias activas de `rsvp_dashboard` en páginas de 500 filas. Consulta `payments` únicamente para esos identificadores. Cuando la vista está vacía, el panel muestra totales en cero y omite la consulta de pagos.
 - Edición: UPDATE rsvp_submissions con los campos editables únicamente; filtro id y updated_at para detectar cambios concurrentes. La base calcula los totales. No permite reducción por debajo de lo abonado; se informa al usuario. No hay eliminación definitiva.
 - Pagos: INSERT payments con id UUID de operación, submission_id, amount, payment_method y note. No se envía recorded_by; lo asigna la base. Reintentos del mismo pago reutilizan id y verifican un posible duplicado autenticado antes de mostrar éxito. No se realizan cobros ni transferencias.
 - Después de cada cambio se recarga la vista y el historial. No hay sincronización realtime; botón Actualizar.
 
+## Retirar una asistencia
+
+En **Familias**, abrí el detalle y pulsá **Eliminar asistencia**. El modal muestra el nombre, los integrantes y el importe abonado. Si hubo pagos, confirmá únicamente después de devolver ese dinero. El registro se hace en el mismo paso y la aplicación vuelve a Familias con los totales actualizados.
+
+La función suma los pagos originales en Supabase, comprueba el importe mostrado en el modal y archiva la asistencia en la misma transacción que registra la devolución. En **Pagos**, la entrada **DEVOLUCIÓN** aparece con signo negativo junto a los pagos originales. Una asistencia sin pagos solo se archiva. Si cambió el importe o la asistencia, actualizá el panel antes de reintentar. No restaures una asistencia con devolución poniendo `archived_at` en `NULL` sin reconciliar el historial económico.
+
+La migración propuesta está en `supabase/review/archive-with-refund.sql`. Revisá su compatibilidad con el esquema y los triggers de pagos del proyecto desplegado. Una vez aprobada, aplicá únicamente ese archivo antes de publicar la interfaz. La vista existente debe excluir las asistencias archivadas y la cuenta administradora debe poder leer sus pagos originales para mostrarlos junto a la devolución. La prueba local usa PostgreSQL embebido y un esquema de prueba.
+
 ## Pruebas
 
-npm run test:rsvp comprueba tarifas, menores gratis, adaptación del contrato dashboard, uso de saldos del servidor y rechazo previo a consultar tablas cuando my_admin_status devuelve false. Usa transporte simulado, no prueba las políticas remotas ni sustituye la prueba integral real.
+`npm run test:rsvp` comprueba tarifas, menores gratis, saldos, permisos del panel, exclusión de pagos archivados y protección contra archivado duplicado. Usa un transporte simulado.
 
 Las migraciones y scripts antiguos quedan como referencia histórica; sus resultados NO validan el esquema actual. No aplicarlos a este proyecto Supabase.
 
@@ -45,6 +53,6 @@ No se crearon usuarios alternativos para probar permisos. Un usuario autenticado
 
 Se inició sesión manualmente con la cuenta existente y se validó acceso a la vista. La sesión se conservó al recargar. Se creó UN registro identificado como PRUEBA TÉCNICA CODEX (id fa7c080a-ff1f-4dc0-bf34-e8b402c93109): cinco personas y 185000. Se registraron pagos técnicos de 50000 y 135000, ambos con observación explícita de que no representan dinero real. La vista confirmó PARCIAL / saldo 135000 y luego PAGADO / saldo 0. Se modificó el nombre a PRUEBA TÉCNICA CODEX · EDICIÓN VERIFICADA y se comprobó que se conserva el historial. Se verificaron búsqueda por teléfono y listado/copia de canción. Un envío anónimo inválido fue rechazado por la Edge Function con HTTP 400 sin guardar datos.
 
-Este registro y sus dos pagos técnicos deben limpiarse de forma coordinada antes de usar los totales para organizar el evento; no se eliminaron ni se alteraron reglas para hacerlo. La interfaz no ofrece eliminación definitiva. No confundir esos importes con recaudación real.
+Los registros técnicos fueron archivados en Supabase. Sus pagos se conservan como respaldo privado y quedan fuera del panel activo.
 
-Se verificó también el cierre de sesión: el panel y los datos desaparecen en las pestañas abiertas y vuelve el ingreso manual. La revisión visual mostró el panel a 360 px. Quedan pendientes: usuario autenticado no administrador, auditoría de spam/CAPTCHA en servidor, limpieza coordinada del registro técnico y configuración de variables en Vercel.
+Se verificó también el cierre de sesión: el panel y los datos desaparecen en las pestañas abiertas y vuelve el ingreso manual. La revisión visual mostró el panel a 360 px. Quedan pendientes: usuario autenticado no administrador, auditoría de spam/CAPTCHA en servidor y configuración de variables en Vercel.
